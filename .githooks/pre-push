@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+echo "Pruning stale remote-tracking branches..."
+git fetch --prune --all

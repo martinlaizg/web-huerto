@@ -43,8 +43,6 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.version.outputs.current }}
             ghcr.io/${{ github.repository }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Increment minor version
         run: npm version minor --no-git-tag-version
