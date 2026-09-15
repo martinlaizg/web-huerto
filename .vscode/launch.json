@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Ejecutar Todo (dev)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Ejecutar Servidor (dev:server)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:server",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Ejecutar Cliente (dev:client)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:client",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Depurar Servidor (tsx)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "tsx",
+        "src/index.ts"
+      ],
+      "cwd": "${workspaceFolder}/server",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Depurar Cliente (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/client/src"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Depurar Full Stack (Servidor + Chrome)",
+      "configurations": [
+        "Depurar Servidor (tsx)",
+        "Depurar Cliente (Chrome)"
+      ]
+    }
+  ]
+}

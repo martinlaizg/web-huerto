@@ -55,6 +55,45 @@ router.post('/import', (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/cultivos/:id
+router.put('/:id', (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { nombre, familia, modo_inicio, semanas_optimas_siembra, duracion_semillero, duracion_crecimiento, duracion_cosecha } = req.body;
+
+    const existing = db.select().from(cultivos).where(eq(cultivos.id, id)).get();
+    if (!existing) {
+      res.status(404).json({ error: 'Cultivo no encontrado' });
+      return;
+    }
+
+    const semanasOptimasStr = Array.isArray(semanas_optimas_siembra)
+      ? JSON.stringify(semanas_optimas_siembra)
+      : existing.semanas_optimas_siembra;
+
+    db.update(cultivos)
+      .set({
+        nombre: nombre || existing.nombre,
+        familia: familia || existing.familia,
+        modo_inicio: modo_inicio || existing.modo_inicio,
+        semanas_optimas_siembra: semanasOptimasStr,
+        duracion_semillero: typeof duracion_semillero === 'number' ? duracion_semillero : existing.duracion_semillero,
+        duracion_crecimiento: typeof duracion_crecimiento === 'number' ? duracion_crecimiento : existing.duracion_crecimiento,
+        duracion_cosecha: typeof duracion_cosecha === 'number' ? duracion_cosecha : existing.duracion_cosecha
+      })
+      .where(eq(cultivos.id, id))
+      .run();
+
+    const updated = db.select().from(cultivos).where(eq(cultivos.id, id)).get();
+    res.json({
+      ...updated,
+      semanas_optimas_siembra: JSON.parse(updated?.semanas_optimas_siembra || '[]')
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/cultivos/:id
 router.delete('/:id', (req: Request, res: Response) => {
   try {

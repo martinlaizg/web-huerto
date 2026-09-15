@@ -20,9 +20,9 @@ router.get('/', (req: Request, res: Response) => {
       cultivo_familia: cultivos.familia,
       cultivo_modo: cultivos.modo_inicio
     })
-    .from(plantaciones)
-    .innerJoin(cultivos, eq(plantaciones.cultivo_id, cultivos.id))
-    .all();
+      .from(plantaciones)
+      .innerJoin(cultivos, eq(plantaciones.cultivo_id, cultivos.id))
+      .all();
 
     res.json(list);
   } catch (err: any) {
@@ -77,6 +77,61 @@ router.post('/', (req: Request, res: Response) => {
       plantacion_id: plantacionId,
       hitos_generados: hitos.length
     });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/plantaciones/:id
+router.patch('/:id', (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { cultivo_id, anio, semana_inicio, estado } = req.body;
+
+    const existing = db.select().from(plantaciones).where(eq(plantaciones.id, id)).get();
+    if (!existing) {
+      res.status(404).json({ error: 'Plantación no encontrada' });
+      return;
+    }
+
+    const newCultivoId = cultivo_id || existing.cultivo_id;
+    const newAnio = typeof anio === 'number' ? anio : existing.anio;
+    const newSemana = typeof semana_inicio === 'number' ? semana_inicio : existing.semana_inicio;
+    const newEstado = estado || existing.estado;
+
+    db.update(plantaciones)
+      .set({
+        cultivo_id: newCultivoId,
+        anio: newAnio,
+        semana_inicio: newSemana,
+        estado: newEstado
+      })
+      .where(eq(plantaciones.id, id))
+      .run();
+
+    // Si cambió la variedad de cultivo o las semanas de inicio, regeneramos los hitos del plan
+    if (cultivo_id || typeof anio === 'number' || typeof semana_inicio === 'number') {
+      const cultivoObj = db.select().from(cultivos).where(eq(cultivos.id, newCultivoId)).get();
+      if (cultivoObj) {
+        // Borrar hitos anteriores y regenerar
+        db.delete(hitosTareas).where(eq(hitosTareas.plantacion_id, id)).run();
+
+        const hitos = generateHitosForPlantacion(id, cultivoObj as CultivoRecord, newAnio, newSemana);
+        for (const hito of hitos) {
+          db.insert(hitosTareas).values({
+            id: hito.id,
+            plantacion_id: hito.plantacion_id,
+            semana_objetivo: hito.semana_objetivo,
+            anio_objetivo: hito.anio_objetivo,
+            tipo_accion: hito.tipo_accion,
+            descripcion: hito.descripcion,
+            completado: hito.completado
+          }).run();
+        }
+      }
+    }
+
+    res.json({ message: 'Plantación actualizada correctamente' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
