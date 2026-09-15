@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HitoTarea } from '../types';
+import { getMondayOfWeek, formatShortDate } from '../App';
 import { CheckSquare, Square, Calendar, ArrowRight, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props {
@@ -59,39 +60,48 @@ export const AgendaSemanal: React.FC<Props> = ({
     bgColor: string
   ) => {
     return (
-      <div className={`p-4 rounded-xl border ${borderColor} ${bgColor} backdrop-blur-sm shadow-md`}>
-        <div className="flex items-center justify-between mb-3 border-b border-slate-700/50 pb-2">
-          <div className="flex items-center space-x-2">
-            <span className={`w-3 h-3 rounded-full ${badgeColor}`}></span>
+      <div className={`p-5 rounded-2xl border ${borderColor} ${bgColor} backdrop-blur-md shadow-lg transition-all`}>
+        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div className="flex items-center space-x-2.5">
+            <span className={`w-3.5 h-3.5 rounded-full ${badgeColor} ring-4 ring-slate-900`}></span>
             <h3 className="font-bold text-slate-100 text-lg">{title}</h3>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-            {items.length}
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">
+            {items.length} {items.length === 1 ? 'tarea' : 'tareas'}
           </span>
         </div>
 
         {items.length === 0 ? (
-          <p className="text-slate-500 text-sm italic py-2">No hay tareas programadas esta semana.</p>
+          <div className="text-slate-500 text-sm italic py-4 text-center bg-slate-900/40 rounded-xl border border-dashed border-slate-800">
+            No hay tareas programadas esta semana.
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {items.map(tarea => (
               <div
                 key={tarea.id}
-                className={`p-3 rounded-lg flex items-center justify-between bg-slate-800/80 hover:bg-slate-800 transition ${
-                  tarea.completado ? 'opacity-60 line-through' : ''
-                }`}
+                className={`p-3.5 rounded-xl flex items-center justify-between bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition ${tarea.completado ? 'opacity-50 line-through bg-slate-950/40' : ''
+                  }`}
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3.5">
                   <button
                     onClick={() => onToggleCompletado(tarea.id, !tarea.completado)}
-                    className="text-emerald-400 hover:text-emerald-300 transition focus:outline-none"
+                    className="text-emerald-400 hover:text-emerald-300 transition focus:outline-none p-1 rounded-lg hover:bg-slate-800"
                   >
-                    {tarea.completado ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5 text-slate-400" />}
+                    {tarea.completado ? (
+                      <CheckSquare className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <Square className="w-5 h-5 text-slate-500" />
+                    )}
                   </button>
                   <div>
-                    <div className="text-sm font-semibold text-slate-200">{tarea.descripcion}</div>
+                    <div className="text-sm font-semibold text-slate-100">{tarea.descripcion}</div>
                     {tarea.cultivo_nombre && (
-                      <div className="text-xs text-slate-400">{tarea.cultivo_nombre} ({tarea.cultivo_familia})</div>
+                      <div className="text-xs text-slate-400 flex items-center space-x-1.5 mt-0.5">
+                        <span className="font-medium text-emerald-400">{tarea.cultivo_nombre}</span>
+                        <span>•</span>
+                        <span className="text-slate-500">{tarea.cultivo_familia}</span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -102,8 +112,8 @@ export const AgendaSemanal: React.FC<Props> = ({
                     setTargetWeek(tarea.semana_objetivo);
                     setTargetYear(tarea.anio_objetivo);
                   }}
-                  className="text-xs text-slate-400 hover:text-sky-400 flex items-center space-x-1 px-2 py-1 bg-slate-900/50 rounded border border-slate-700 hover:border-sky-500 transition"
-                  title="Reajustar semana"
+                  className="text-xs font-semibold text-slate-400 hover:text-sky-400 flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-800 rounded-lg border border-slate-700/80 hover:border-sky-500/50 transition shadow-sm"
+                  title="Reajustar semana de la tarea"
                 >
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Mover</span>
@@ -116,30 +126,44 @@ export const AgendaSemanal: React.FC<Props> = ({
     );
   };
 
+  const mondayDate = getMondayOfWeek(semana, anio);
+  const sundayDate = new Date(mondayDate);
+  sundayDate.setDate(mondayDate.getDate() + 6);
+
   return (
     <div className="space-y-6">
       {/* Header semana selector */}
-      <div className="flex flex-col sm:flex-row items-center justify-between bg-slate-800/90 p-4 rounded-xl border border-slate-700 shadow">
-        <div className="flex items-center space-x-3 mb-3 sm:mb-0">
-          <Calendar className="w-6 h-6 text-emerald-400" />
-          <h2 className="text-xl font-bold text-white">
-            Agenda Semanal <span className="text-emerald-400">Semana {semana}</span> ({anio})
-          </h2>
+      <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-slate-900 to-slate-850 p-5 rounded-2xl border border-slate-800 shadow-xl gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+            <Calendar className="w-6 h-6 text-emerald-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-white">
+              Agenda Semanal <span className="text-emerald-400">Semana {semana}</span> ({anio})
+            </h2>
+            <p className="text-xs text-emerald-400 font-medium mt-0.5 flex items-center space-x-1">
+              <span>🗓️ Lunes {formatShortDate(mondayDate)} al Domingo {formatShortDate(sundayDate)}</span>
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={prevWeek}
-            className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
+            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition"
+            title="Semana anterior"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <div className="px-3 py-1.5 bg-slate-900 rounded-lg text-sm font-medium border border-slate-700">
-            Semana {semana} / 52
+          <div className="px-4 py-2 bg-slate-950 rounded-xl text-xs font-bold border border-slate-800 text-slate-200 text-center">
+            <div>Semana {semana} / 52</div>
+            <div className="text-[10px] text-emerald-400 font-medium">Inicia Lun {formatShortDate(mondayDate)}</div>
           </div>
           <button
             onClick={nextWeek}
-            className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
+            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition"
+            title="Semana siguiente"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
